@@ -16,7 +16,7 @@ load_dotenv()
 # কনফিগারেশন
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 PORT = int(os.getenv('PORT', 5000))
-FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://your-frontend.vercel.app')
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'https://magenta-melomakarona-5a38d8.netlify.app')
 WEBHOOK_URL = os.getenv('RENDER_EXTERNAL_URL', f'https://localhost:{PORT}')  # Render স্বয়ংক্রিয়ভাবে দেয়
 
 # লগিং
